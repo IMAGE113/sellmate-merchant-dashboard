@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  "config": {
+    "legacy-peer-deps": true
+  },
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
