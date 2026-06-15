@@ -148,7 +148,7 @@ export default function OrdersPage() {
                       <td className="py-3 px-4 font-medium text-foreground">{order.order_id}</td>
                       <td className="py-3 px-4 text-foreground">{order.customer_name}</td>
                       <td className="py-3 px-4 text-foreground">{order.phone}</td>
-                      <td className="py-3 px-4 font-semibold text-foreground">${order.amount.toLocaleString()}</td>
+                      <td className="py-3 px-4 font-semibold text-foreground">${(order?.amount ?? 0).toLocaleString()}</td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -165,7 +165,7 @@ export default function OrdersPage() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
-                        {new Date(order.created_at).toLocaleDateString()}
+                        {order?.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}
                       </td>
                     </tr>
                   ))}
