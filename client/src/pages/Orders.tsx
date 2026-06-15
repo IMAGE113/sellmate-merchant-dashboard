@@ -35,29 +35,50 @@ export default function OrdersPage() {
       setIsLoading(true);
       setError(null);
       const response = await apiClient.getOrders(page, limit);
-      setOrders(response.orders);
-      setTotal(response.total);
+      
+      // ✅ [FIX] Response ဒေတာပုံစံ ဘယ်လိုပဲ လွဲလာပါစေ Crash မဖြစ်အောင် ပိတ်စစ်ထားတယ် Bro
+      if (response && Array.isArray(response.orders)) {
+        setOrders(response.orders);
+        setTotal(response.total ?? response.orders.length);
+      } else if (Array.isArray(response)) {
+        // တကယ်လို့ API က orders: Object မဟုတ်ဘဲ Array တိုက်ရိုက် ပို့လာခဲ့ရင်
+        setOrders(response);
+        setTotal(response.length);
+      } else {
+        setOrders([]);
+        setTotal(0);
+      }
     } catch (err) {
       const errorMsg = axios.isAxiosError(err)
         ? err.response?.data?.message || 'Failed to load orders'
         : 'An error occurred';
       setError(errorMsg);
       toast.error(errorMsg);
+      setOrders([]); // Error ဖြစ်ရင်လည်း ဗလာ Array ပေးပြီး App ကို အသေခံမယ် Bro
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filteredOrders = orders.filter((order) => {
+  // ✅ [FIX] orders က Array ဖြစ်မှ filter ပတ်မယ်လို့ သေချာ ကာကွယ်ထားတယ် Bro
+  const filteredOrders = (Array.isArray(orders) ? orders : []).filter((order) => {
+    if (!order) return false;
+    
+    // Safety check for strings to prevent undefined.toLowerCase() crash
+    const orderId = order.order_id || "";
+    const customerName = order.customer_name || "";
+    const phone = order.phone || "";
+
     const matchesSearch =
-      order.order_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.phone.includes(searchTerm);
+      orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      phone.includes(searchTerm);
+      
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.ceil(total / limit) || 1;
 
   return (
     <DashboardLayout>
@@ -105,7 +126,7 @@ export default function OrdersPage() {
               </SelectContent>
             </Select>
 
-            <Select value={limit.toString()} onValueChange={(v) => setLimit(Number(v))}>
+            <Select value={limit.toString()} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Items per page" />
               </SelectTrigger>
@@ -144,24 +165,24 @@ export default function OrdersPage() {
                 </thead>
                 <tbody>
                   {filteredOrders.map((order) => (
-                    <tr key={order.order_id} className="border-b border-border hover:bg-secondary/50 transition-colors">
-                      <td className="py-3 px-4 font-medium text-foreground">{order.order_id}</td>
-                      <td className="py-3 px-4 text-foreground">{order.customer_name}</td>
-                      <td className="py-3 px-4 text-foreground">{order.phone}</td>
+                    <tr key={order?.order_id || Math.random().toString()} className="border-b border-border hover:bg-secondary/50 transition-colors">
+                      <td className="py-3 px-4 font-medium text-foreground">{order?.order_id || 'N/A'}</td>
+                      <td className="py-3 px-4 text-foreground">{order?.customer_name || 'Unknown'}</td>
+                      <td className="py-3 px-4 text-foreground">{order?.phone || 'N/A'}</td>
                       <td className="py-3 px-4 font-semibold text-foreground">${(order?.amount ?? 0).toLocaleString()}</td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            order.status === 'completed'
+                            order?.status === 'completed'
                               ? 'bg-green-100 text-green-700'
-                              : order.status === 'pending'
+                              : order?.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-700'
-                              : order.status === 'processing'
+                              : order?.status === 'processing'
                               ? 'bg-blue-100 text-blue-700'
                               : 'bg-red-100 text-red-700'
                           }`}
                         >
-                          {order.status}
+                          {order?.status || 'pending'}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
@@ -201,7 +222,7 @@ export default function OrdersPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
+                disabled={page === totalPages || page >= totalPages}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
