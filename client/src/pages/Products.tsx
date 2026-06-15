@@ -146,7 +146,7 @@ export default function ProductsPage() {
                   {filteredProducts.map((product) => (
                     <tr key={product.product_id} className="border-b border-border hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 font-medium text-foreground">{product.product_name}</td>
-                      <td className="py-3 px-4 text-foreground">${product.price.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-foreground">${(product?.price ?? 0).toLocaleString()}</td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -159,7 +159,7 @@ export default function ProductsPage() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
-                        {new Date(product.created_date).toLocaleDateString()}
+                        {product?.created_date ? new Date(product.created_date).toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex gap-2">
