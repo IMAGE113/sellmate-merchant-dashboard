@@ -25,14 +25,17 @@ export interface MeResponse {
   requirements: string;
 }
 
-export interface DashboardOverview {
+export interface DashboardOverviewStats {
+  pending_payments: number;
+  recent_orders: number;
+  confirmed_orders: number;
+  cancelled_orders: number;
   total_orders: number;
-  revenue: number;
-  pending_orders: number;
-  products: number;
+}
+
+export interface DashboardOverview {
+  stats: DashboardOverviewStats;
   recent_orders: Order[];
-  revenue_chart: ChartData[];
-  top_products: TopProduct[];
 }
 
 export interface Order {
@@ -65,8 +68,8 @@ export interface Product {
 }
 
 export interface AnalyticsData {
-  revenue_trend: ChartData[];
-  orders_trend: ChartData[];
+  revenue_trend?: ChartData[];
+  orders_trend?: ChartData[];
 }
 
 export interface ProfileData {
