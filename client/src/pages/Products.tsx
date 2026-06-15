@@ -48,7 +48,7 @@ export default function ProductsPage() {
     }
   };
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = (products || []).filter((product) => {
     const matchesSearch = product.product_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
     return matchesSearch && matchesStatus;
