@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiClient, DashboardOverview } from '@/lib/api';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Card } from '@/components/ui/card';
@@ -70,25 +70,25 @@ export default function DashboardPage() {
             <>
               <StatCard
                 title="Total Orders"
-                value={data.total_orders}
+                value={data?.stats?.total_orders ?? 0}
                 icon={ShoppingCart}
                 color="blue"
               />
               <StatCard
-                title="Revenue"
-                value={`$${data.revenue.toLocaleString()}`}
+                title="Pending Payments"
+                value={data?.stats?.pending_payments ?? 0}
                 icon={TrendingUp}
-                color="green"
-              />
-              <StatCard
-                title="Pending Orders"
-                value={data.pending_orders}
-                icon={ShoppingCart}
                 color="orange"
               />
               <StatCard
-                title="Products"
-                value={data.products}
+                title="Confirmed Orders"
+                value={data?.stats?.confirmed_orders ?? 0}
+                icon={ShoppingCart}
+                color="green"
+              />
+              <StatCard
+                title="Cancelled Orders"
+                value={data?.stats?.cancelled_orders ?? 0}
                 icon={Package}
                 color="purple"
               />
@@ -103,28 +103,11 @@ export default function DashboardPage() {
             <h3 className="text-lg font-semibold text-foreground mb-4">Revenue Trend</h3>
             {isLoading ? (
               <Skeleton className="h-64 w-full" />
-            ) : data?.revenue_chart ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={data.revenue_chart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="date" stroke="var(--color-muted-foreground)" />
-                  <YAxis stroke="var(--color-muted-foreground)" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--color-card)',
-                      border: '1px solid var(--color-border)',
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="var(--color-primary)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : null}
+            ) : (
+              <div className="h-64 flex items-center justify-center text-muted-foreground">
+                <p>Revenue data not available</p>
+              </div>
+            )}
           </Card>
 
           {/* Top Products */}
@@ -138,19 +121,11 @@ export default function DashboardPage() {
                     <Skeleton key={i} className="h-12 w-full" />
                   ))}
               </div>
-            ) : data?.top_products ? (
-              <div className="space-y-3">
-                {data.top_products.map((product) => (
-                  <div key={product.product_id} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-sm text-foreground">{product.product_name}</p>
-                      <p className="text-xs text-muted-foreground">{product.sales} sales</p>
-                    </div>
-                    <p className="font-semibold text-primary">${product.revenue.toLocaleString()}</p>
-                  </div>
-                ))}
+            ) : (
+              <div className="p-8 text-center text-muted-foreground">
+                <p>Top products data not available</p>
               </div>
-            ) : null}
+            )}
           </Card>
         </div>
 
@@ -165,7 +140,7 @@ export default function DashboardPage() {
                   <Skeleton key={i} className="h-12 w-full" />
                 ))}
             </div>
-          ) : data?.recent_orders ? (
+          ) : (data?.recent_orders?.length ?? 0) > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -177,24 +152,24 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.recent_orders.map((order) => (
-                    <tr key={order.order_id} className="border-b border-border hover:bg-secondary/50">
-                      <td className="py-3 px-4 text-foreground">{order.order_id}</td>
-                      <td className="py-3 px-4 text-foreground">{order.customer_name}</td>
-                      <td className="py-3 px-4 text-foreground font-semibold">${order.amount}</td>
+                  {(data?.recent_orders ?? []).map((order) => (
+                    <tr key={order?.order_id} className="border-b border-border hover:bg-secondary/50">
+                      <td className="py-3 px-4 text-foreground">{order?.order_id || 'N/A'}</td>
+                      <td className="py-3 px-4 text-foreground">{order?.customer_name || 'N/A'}</td>
+                      <td className="py-3 px-4 text-foreground font-semibold">${(order?.amount ?? 0).toLocaleString()}</td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            order.status === 'completed'
+                            order?.status === 'completed'
                               ? 'bg-green-100 text-green-700'
-                              : order.status === 'pending'
+                              : order?.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-700'
-                              : order.status === 'processing'
+                              : order?.status === 'processing'
                               ? 'bg-blue-100 text-blue-700'
                               : 'bg-red-100 text-red-700'
                           }`}
                         >
-                          {order.status}
+                          {order?.status || 'N/A'}
                         </span>
                       </td>
                     </tr>
@@ -202,7 +177,11 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             </div>
-          ) : null}
+          ) : (
+            <div className="p-8 text-center text-muted-foreground">
+              <p>No recent orders</p>
+            </div>
+          )}
         </Card>
       </div>
     </DashboardLayout>
