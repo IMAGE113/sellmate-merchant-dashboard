@@ -35,8 +35,8 @@ export default function ProductsPage() {
       setIsLoading(true);
       setError(null);
       const response = await apiClient.getProducts(page, limit);
-      setProducts(response.products);
-      setTotal(response.total);
+      setProducts(response || []);
+      setTotal(response?.length || 0);
     } catch (err) {
       const errorMsg = axios.isAxiosError(err)
         ? err.response?.data?.message || 'Failed to load products'
