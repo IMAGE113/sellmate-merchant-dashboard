@@ -61,9 +61,9 @@ export default function AnalyticsPage() {
             <h3 className="text-lg font-semibold text-foreground mb-4">Revenue Trend</h3>
             {isLoading ? (
               <Skeleton className="h-80 w-full" />
-            ) : data?.revenue_trend ? (
+            ) : (data?.revenue_trend?.length ?? 0) > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data.revenue_trend}>
+                <LineChart data={data?.revenue_trend || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="date" stroke="var(--color-muted-foreground)" />
                   <YAxis stroke="var(--color-muted-foreground)" />
@@ -92,9 +92,9 @@ export default function AnalyticsPage() {
             <h3 className="text-lg font-semibold text-foreground mb-4">Orders Trend</h3>
             {isLoading ? (
               <Skeleton className="h-80 w-full" />
-            ) : data?.orders_trend ? (
+            ) : (data?.orders_trend?.length ?? 0) > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={data.orders_trend}>
+                <BarChart data={data?.orders_trend || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="date" stroke="var(--color-muted-foreground)" />
                   <YAxis stroke="var(--color-muted-foreground)" />
@@ -121,9 +121,9 @@ export default function AnalyticsPage() {
           <h3 className="text-lg font-semibold text-foreground mb-4">Revenue & Orders Overview</h3>
           {isLoading ? (
             <Skeleton className="h-80 w-full" />
-          ) : data?.revenue_trend ? (
+          ) : (data?.revenue_trend?.length ?? 0) > 0 ? (
             <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={data.revenue_trend}>
+              <LineChart data={data?.revenue_trend || []}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                 <XAxis dataKey="date" stroke="var(--color-muted-foreground)" />
                 <YAxis stroke="var(--color-muted-foreground)" />
