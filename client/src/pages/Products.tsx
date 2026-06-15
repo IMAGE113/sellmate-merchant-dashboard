@@ -35,26 +35,40 @@ export default function ProductsPage() {
       setIsLoading(true);
       setError(null);
       const response = await apiClient.getProducts(page, limit);
-      setProducts(response || []);
-      setTotal(response?.length || 0);
+      
+      // ✅ [FIX] Response က Array အစစ် ဟုတ်မဟုတ် သေချာအောင် စစ်ပြီးမှ ထည့်မယ် Bro
+      // တကယ်လို့ Backend က { products: [...] } ပုံစံမျိုး ပြောင်းပို့ရင်လည်း ခံနိုင်အောင် ညှိထားတယ်
+      if (Array.isArray(response)) {
+        setProducts(response);
+        setTotal(response.length);
+      } else if (response && Array.isArray((response as any).products)) {
+        setProducts((response as any).products);
+        setTotal((response as any).total || (response as any).products.length);
+      } else {
+        setProducts([]);
+        setTotal(0);
+      }
     } catch (err) {
       const errorMsg = axios.isAxiosError(err)
         ? err.response?.data?.message || 'Failed to load products'
         : 'An error occurred';
       setError(errorMsg);
       toast.error(errorMsg);
+      setProducts([]); // Error တက်ရင်လည်း ဗလာ Array ပေးထားမယ် Bro
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.product_name.toLowerCase().includes(searchTerm.toLowerCase());
+  // ✅ [FIX] products က ဘယ်လိုပဲ လွဲနေပါစေ Array ဖြစ်မှ filter လုပ်မယ်လို့ Defensive ကုဒ် အသေခံထားတယ် Bro
+  const filteredProducts = (Array.isArray(products) ? products : []).filter((product) => {
+    if (!product) return false;
+    const matchesSearch = (product.product_name || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.ceil(total / limit) || 1;
 
   return (
     <DashboardLayout>
@@ -106,7 +120,7 @@ export default function ProductsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={limit.toString()} onValueChange={(v) => setLimit(Number(v))}>
+            <Select value={limit.toString()} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
               <SelectTrigger>
                 <SelectValue placeholder="Items per page" />
               </SelectTrigger>
@@ -144,18 +158,18 @@ export default function ProductsPage() {
                 </thead>
                 <tbody>
                   {filteredProducts.map((product) => (
-                    <tr key={product.product_id} className="border-b border-border hover:bg-secondary/50 transition-colors">
-                      <td className="py-3 px-4 font-medium text-foreground">{product.product_name}</td>
+                    <tr key={product?.product_id || Math.random().toString()} className="border-b border-border hover:bg-secondary/50 transition-colors">
+                      <td className="py-3 px-4 font-medium text-foreground">{product?.product_name || 'Unknown Product'}</td>
                       <td className="py-3 px-4 text-foreground">${(product?.price ?? 0).toLocaleString()}</td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            product.status === 'active'
+                            product?.status === 'active'
                               ? 'bg-green-100 text-green-700'
                               : 'bg-gray-100 text-gray-700'
                           }`}
                         >
-                          {product.status}
+                          {product?.status || 'inactive'}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
@@ -205,7 +219,7 @@ export default function ProductsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
+                disabled={page === totalPages || page >= totalPages}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
