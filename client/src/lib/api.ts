@@ -176,10 +176,11 @@ class APIClient {
     return response.data;
   }
 
-  async getProducts(page?: number, limit?: number): Promise<Product[]>
+  async getProducts(page?: number, limit?: number): Promise<Product[]> {
   const response = await this.client.get('/dashboard/products', {
     params: { page, limit },
   });
+
   return response.data;
 }
 
