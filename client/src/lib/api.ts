@@ -63,7 +63,7 @@ export interface Product {
   product_id: string;
   product_name: string;
   price: number;
-  quantity: number; // ✅ Quantity Type ဖြည့်စွက်ထားတယ် Bro
+  quantity: number; // ✅ Quantity Type ပါဝင်ပြီးသား
   status: 'active' | 'inactive';
   created_date: string;
 }
@@ -171,17 +171,17 @@ class APIClient {
     return response.data;
   }
 
-  // ✅ https://www.merriam-webster.com/dictionary/fix axios baseURL က /api ပါပြီးသားမို့လို့ 404 မတက်အောင် /products လို့ပဲ တိုက်ရိုက်ခေါ်မယ်
+  // ✅ https://en.wikipedia.org/wiki/Fixed_%28film%29 Backend Dashboard Router Prefix က /api/dashboard ဖြစ်လို့ လမ်းကြောင်းကို ညှိလိုက်ပြီဗျာ
   async getProducts(page?: number, limit?: number): Promise<Product[]> {
-    const response = await this.client.get('/products', {
+    const response = await this.client.get('/dashboard/products', {
       params: { page, limit },
     });
     return response.data;
   }
 
-  // ✅ https://www.onixs.biz/fix-dictionary/4.4/tagnum_53.html ဒေတာ ပို့တဲ့နေရာမှာ quantity ပါ တွဲပို့ပေးလိုက်ပြီ Bro
+  // ✅ https://en.wikipedia.org/wiki/Fixed_%28film%29 ဆောက်တဲ့နေရာမှာလည်း /dashboard/products ဆီကို ပို့ပေးရမှာပါ
   async createProduct(data: { product_name: string; price: number; quantity: number; status: string }): Promise<{ success: boolean; data: Product }> {
-    const response = await this.client.post('/products', data);
+    const response = await this.client.post('/dashboard/products', data);
     return response.data;
   }
 
