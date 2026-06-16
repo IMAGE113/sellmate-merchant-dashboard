@@ -193,7 +193,8 @@ class APIClient {
     return response.data;
   }
 
-  async updateSettings(data: Partial<ProfileData>): Promise<{ success: boolean }> {
+  // ✅ Telegram Token တွေပါ တစ်ခါတည်း သယ်သွားနိုင်အောင် updateSettings ကို API အပြည့်အစုံ ချိတ်ထားပေးတယ် Bro
+  async updateSettings(data: { bot_token: string; bot_username: string }): Promise<{ success: boolean }> {
     const response = await this.client.post('/dashboard/settings', data);
     return response.data;
   }
