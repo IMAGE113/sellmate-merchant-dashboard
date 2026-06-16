@@ -34,7 +34,6 @@ export default function ProductsPage() {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
 
-  // Form States for Add Product Modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
   const [newProductPrice, setNewProductPrice] = useState('');
@@ -84,7 +83,6 @@ export default function ProductsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-foreground">Products</h1>
           <div className="flex gap-2">
@@ -106,7 +104,6 @@ export default function ProductsPage() {
                 </DialogHeader>
                 
                 <div className="grid gap-4 py-4">
-                  {/* Name Input */}
                   <div className="grid gap-2">
                     <label htmlFor="name" className="text-sm font-medium text-foreground">
                       Product Name
@@ -119,7 +116,6 @@ export default function ProductsPage() {
                     />
                   </div>
                   
-                  {/* Price Input */}
                   <div className="grid gap-2">
                     <label htmlFor="price" className="text-sm font-medium text-foreground">
                       Price ($)
@@ -133,7 +129,6 @@ export default function ProductsPage() {
                     />
                   </div>
 
-                  {/* Quantity Input */}
                   <div className="grid gap-2">
                     <label htmlFor="quantity" className="text-sm font-medium text-foreground">
                       Quantity
