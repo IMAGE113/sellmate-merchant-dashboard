@@ -38,6 +38,7 @@ export default function ProductsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
   const [newProductPrice, setNewProductPrice] = useState('');
+  const [newProductQuantity, setNewProductQuantity] = useState(''); // ✅ Quantity State တိုးလိုက်ပြီ Bro
 
   useEffect(() => {
     fetchProducts();
@@ -49,7 +50,6 @@ export default function ProductsPage() {
       setError(null);
       const response = await apiClient.getProducts(page, limit);
       
-      // ✅ [FIX] Response က Array အစစ် ဟုတ်မဟုတ် သေჩာအောင် စစ်ပြီးမှ ထည့်မယ် Bro
       if (Array.isArray(response)) {
         setProducts(response);
         setTotal(response.length);
@@ -66,13 +66,12 @@ export default function ProductsPage() {
         : 'An error occurred';
       setError(errorMsg);
       toast.error(errorMsg);
-      setProducts([]); // Error တက်ရင်လည်း ဗလာ Array ပေးထားမယ် Bro
+      setProducts([]); 
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ✅ [FIX] products က ဘယ်လိုပဲ လွဲနေပါစေ Array ဖြစ်မှ filter လုပ်မယ်လို့ Defensive ကုဒ် အသေခံထားတယ် Bro
   const filteredProducts = (Array.isArray(products) ? products : []).filter((product) => {
     if (!product) return false;
     const matchesSearch = (product.product_name || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -93,7 +92,6 @@ export default function ProductsPage() {
               Refresh
             </Button>
             
-            {/* ✅ [REAL ADD PRODUCT MODAL] Fake Button နေရာမှာ တကယ့် Real Dialog အစားထိုးလိုက်ပြီ Bro */}
             <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -108,6 +106,7 @@ export default function ProductsPage() {
                 </DialogHeader>
                 
                 <div className="grid gap-4 py-4">
+                  {/* Name Input */}
                   <div className="grid gap-2">
                     <label htmlFor="name" className="text-sm font-medium text-foreground">
                       Product Name
@@ -120,6 +119,7 @@ export default function ProductsPage() {
                     />
                   </div>
                   
+                  {/* Price Input */}
                   <div className="grid gap-2">
                     <label htmlFor="price" className="text-sm font-medium text-foreground">
                       Price ($)
@@ -132,6 +132,20 @@ export default function ProductsPage() {
                       onChange={(e) => setNewProductPrice(e.target.value)}
                     />
                   </div>
+
+                  {/* ✅ Quantity Input ကွက် အသစ်စက်စက် ဖြည့်ထားတာ Bro */}
+                  <div className="grid gap-2">
+                    <label htmlFor="quantity" className="text-sm font-medium text-foreground">
+                      Quantity
+                    </label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      placeholder="0"
+                      value={newProductQuantity}
+                      onChange={(e) => setNewProductQuantity(e.target.value)}
+                    />
+                  </div>
                 </div>
                 
                 <DialogFooter className="gap-2 sm:gap-0">
@@ -139,13 +153,14 @@ export default function ProductsPage() {
                     Cancel
                   </Button>
                   <Button 
-                    disabled={!newProductName || !newProductPrice} 
+                    disabled={!newProductName || !newProductPrice || !newProductQuantity} 
                     onClick={async () => {
                       try {
-                        // ✅ စောစောက အလွတ်ခေါ်ထားတဲ့နေရာမှာ apiClient က ဆောက်ထားတဲ့ Method အစစ်နဲ့ ချိတ်လိုက်ပြီ Bro
+                        // ✅ API ဆီကို Quantity ပါ ကွက်တိ ထည့်ပြီး ပို့လိုက်ပြီ Bro
                         await apiClient.createProduct({
                           product_name: newProductName,
                           price: Number(newProductPrice),
+                          quantity: Number(newProductQuantity),
                           status: 'active'
                         });
 
@@ -155,6 +170,7 @@ export default function ProductsPage() {
                         
                         setNewProductName(''); 
                         setNewProductPrice('');
+                        setNewProductQuantity('');
                       } catch (err) {
                         console.error("Add product error:", err);
                         toast.error(axios.isAxiosError(err) && err.response?.data?.message 
@@ -236,6 +252,8 @@ export default function ProductsPage() {
                   <tr>
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Product Name</th>
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Price</th>
+                    {/* ✅ Table Header မှာ Quantity ပြဖို့ ထည့်လိုက်တယ် Bro */}
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Quantity</th>
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Created Date</th>
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Actions</th>
@@ -246,6 +264,8 @@ export default function ProductsPage() {
                     <tr key={product?.product_id || Math.random().toString()} className="border-b border-border hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 font-medium text-foreground">{product?.product_name || 'Unknown Product'}</td>
                       <td className="py-3 px-4 text-foreground">${(product?.price ?? 0).toLocaleString()}</td>
+                      {/* ✅ Table Body ထဲမှာလည်း တစ်ခါတည်း Quantity လှမ်းပြထားမယ် */}
+                      <td className="py-3 px-4 text-foreground">{(product?.quantity ?? 0).toLocaleString()}</td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -314,4 +334,4 @@ export default function ProductsPage() {
       </div>
     </DashboardLayout>
   );
-} 
+}
