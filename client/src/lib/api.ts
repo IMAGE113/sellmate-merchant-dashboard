@@ -63,7 +63,7 @@ export interface Product {
   product_id: string;
   product_name: string;
   price: number;
-  quantity: number; // ✅ Quantity Type ပါဝင်ပြီးသား
+  quantity: number; 
   status: 'active' | 'inactive';
   created_date: string;
 }
@@ -171,7 +171,6 @@ class APIClient {
     return response.data;
   }
 
-  // ✅ https://en.wikipedia.org/wiki/Fixed_%28film%29 Backend Dashboard Router Prefix က /api/dashboard ဖြစ်လို့ လမ်းကြောင်းကို ညှိလိုက်ပြီဗျာ
   async getProducts(page?: number, limit?: number): Promise<Product[]> {
     const response = await this.client.get('/dashboard/products', {
       params: { page, limit },
@@ -179,7 +178,6 @@ class APIClient {
     return response.data;
   }
 
-  // ✅ https://en.wikipedia.org/wiki/Fixed_%28film%29 ဆောက်တဲ့နေရာမှာလည်း /dashboard/products ဆီကို ပို့ပေးရမှာပါ
   async createProduct(data: { product_name: string; price: number; quantity: number; status: string }): Promise<{ success: boolean; data: Product }> {
     const response = await this.client.post('/dashboard/products', data);
     return response.data;
