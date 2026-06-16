@@ -176,16 +176,17 @@ class APIClient {
     return response.data;
   }
 
+  // ✅ [FIX] Backend လမ်းကြောင်းအတိုင်း /products ဆီ ပြောင်းခေါ်ထားတယ် Bro
   async getProducts(page?: number, limit?: number): Promise<Product[]> {
-    const response = await this.client.get('/dashboard/products', {
+    const response = await this.client.get('/products', {
       params: { page, limit },
     });
     return response.data;
   }
 
-  // ✅ Product အသစ်ဆောက်ဖို့အတွက် တကယ့် API Endpoint အစစ်ကို လှမ်းခေါ်တဲ့ Method ထည့်လိုက်ပြီ Bro
+  // ✅ [FIX] Backend လမ်းကြောင်းအတိုင်း /products ဆီ POST Request ပို့အောင် ညှိလိုက်ပြီ Bro
   async createProduct(data: { product_name: string; price: number; status: string }): Promise<{ success: boolean; data: Product }> {
-    const response = await this.client.post('/dashboard/products', data);
+    const response = await this.client.post('/products', data);
     return response.data;
   }
 
