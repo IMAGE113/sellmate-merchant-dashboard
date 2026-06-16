@@ -63,6 +63,7 @@ export interface Product {
   product_id: string;
   product_name: string;
   price: number;
+  quantity: number; // ✅ Quantity Type ဖြည့်စွက်ထားတယ် Bro
   status: 'active' | 'inactive';
   created_date: string;
 }
@@ -95,13 +96,11 @@ class APIClient {
       timeout: 10000,
     });
 
-    // Load token from localStorage
     this.token = localStorage.getItem('auth_token');
     this.setupInterceptors();
   }
 
   private setupInterceptors() {
-    // Request interceptor
     this.client.interceptors.request.use((config) => {
       if (this.token) {
         config.headers.Authorization = `Bearer ${this.token}`;
@@ -109,12 +108,10 @@ class APIClient {
       return config;
     });
 
-    // Response interceptor
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
-          // Clear token and redirect to login
           this.clearToken();
           window.location.href = '/login';
         }
@@ -138,7 +135,6 @@ class APIClient {
     return this.token;
   }
 
-  // Auth endpoints
   async login(data: LoginRequest): Promise<LoginResponse> {
     const response = await this.client.post('/auth/login', data);
     return response.data;
@@ -158,7 +154,6 @@ class APIClient {
     return response.data;
   }
 
-  // Dashboard endpoints
   async getDashboardOverview(): Promise<DashboardOverview> {
     const response = await this.client.get('/dashboard/overview');
     return response.data;
@@ -176,7 +171,7 @@ class APIClient {
     return response.data;
   }
 
-  // ✅ [FIX] Backend လမ်းကြောင်းအတိုင်း /products ဆီ ပြောင်းခေါ်ထားတယ် Bro
+  // ✅ https://www.merriam-webster.com/dictionary/fix axios baseURL က /api ပါပြီးသားမို့လို့ 404 မတက်အောင် /products လို့ပဲ တိုက်ရိုက်ခေါ်မယ်
   async getProducts(page?: number, limit?: number): Promise<Product[]> {
     const response = await this.client.get('/products', {
       params: { page, limit },
@@ -184,8 +179,8 @@ class APIClient {
     return response.data;
   }
 
-  // ✅ [FIX] Backend လမ်းကြောင်းအတိုင်း /products ဆီ POST Request ပို့အောင် ညှိလိုက်ပြီ Bro
-  async createProduct(data: { product_name: string; price: number; status: string }): Promise<{ success: boolean; data: Product }> {
+  // ✅ https://www.onixs.biz/fix-dictionary/4.4/tagnum_53.html ဒေတာ ပို့တဲ့နေရာမှာ quantity ပါ တွဲပို့ပေးလိုက်ပြီ Bro
+  async createProduct(data: { product_name: string; price: number; quantity: number; status: string }): Promise<{ success: boolean; data: Product }> {
     const response = await this.client.post('/products', data);
     return response.data;
   }
