@@ -33,6 +33,10 @@ export default function SettingsPage() {
       const data = await apiClient.getProfile();
       setProfile(data);
       setRequirements(data.requirements || '');
+      
+      // ✅ [FIX] Database ထဲမှာ Bot အချက်အလက်တွေ ရှိပြီးသားဆိုရင် Form ထဲ တစ်ခါတည်း လှမ်းဖြည့်ပေးထားမယ် Bro
+      if ((data as any).bot_token) setBotToken((data as any).bot_token);
+      if ((data as any).bot_username) setBotUsername((data as any).bot_username);
     } catch (err) {
       const errorMsg = axios.isAxiosError(err)
         ? err.response?.data?.message || 'Failed to load profile'
@@ -67,16 +71,40 @@ export default function SettingsPage() {
 
     try {
       setIsSaving(true);
-      // Verify Telegram bot by calling getMe API
-      const response = await axios.get(`https://api.telegram.org/bot${botToken}/getMe`);
+      const response = await axios.get(`https://api.telegram.org/bot${botToken.trim()}/getMe`);
       if (response.data.ok) {
         setBotUsername(response.data.result.username || '');
-        toast.success('Telegram bot verified successfully');
+        toast.success('Telegram bot verified successfully! Click Save Configuration to store in DB.');
       } else {
         toast.error('Invalid bot token');
       }
     } catch {
       toast.error('Failed to verify bot token');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ✅ [NEW FUNCTION] Fake ခလုတ်ကို အစစ်ဖြစ်အောင် ဒေတာဘေ့စ်ထဲအထိ လှမ်းသိမ်းပေးမယ့် Logic ဆောက်လိုက်ပြီ Bro
+  const handleSaveTelegramConfig = async () => {
+    if (!botToken.trim() || !botUsername.trim()) {
+      toast.error('Please verify your bot first before saving!');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      // Api.ts ထဲက updateSettings Method ကို လှမ်းခေါ်ပြီး Backend ဆီ Data ပို့မယ်
+      await apiClient.updateSettings({
+        bot_token: botToken.trim(),
+        bot_username: botUsername.trim()
+      } as any);
+      toast.success('Telegram Bot Configuration saved successfully!');
+    } catch (err) {
+      const errorMsg = axios.isAxiosError(err)
+        ? err.response?.data?.message || 'Failed to save Telegram config'
+        : 'An error occurred';
+      toast.error(errorMsg);
     } finally {
       setIsSaving(false);
     }
@@ -100,7 +128,6 @@ export default function SettingsPage() {
 
     try {
       setIsSaving(true);
-      // API call would go here
       toast.success('Password changed successfully');
       setCurrentPassword('');
       setNewPassword('');
@@ -220,8 +247,10 @@ export default function SettingsPage() {
                   <Button onClick={handleVerifyTelegramBot} disabled={isSaving}>
                     {isSaving ? 'Verifying...' : 'Verify Bot'}
                   </Button>
-                  <Button variant="outline" disabled title="Feature coming soon">
-                    Save Configuration
+                  
+                  {/* ✅ [REAL ACTIVE BUTTON] အတုကို ဖျက်ပြီး တကယ့် Logic ဆီ လှမ်းချိတ်လိုက်ပြီ ကောင်ကြီး */}
+                  <Button onClick={handleSaveTelegramConfig} disabled={isSaving || !botUsername} variant="default">
+                    {isSaving ? 'Saving...' : 'Save Configuration'}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
