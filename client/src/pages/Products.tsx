@@ -12,6 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Search, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -26,6 +34,11 @@ export default function ProductsPage() {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
 
+  // Form States for Add Product Modal
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newProductName, setNewProductName] = useState('');
+  const [newProductPrice, setNewProductPrice] = useState('');
+
   useEffect(() => {
     fetchProducts();
   }, [page, limit]);
@@ -36,8 +49,7 @@ export default function ProductsPage() {
       setError(null);
       const response = await apiClient.getProducts(page, limit);
       
-      // ✅ [FIX] Response က Array အစစ် ဟုတ်မဟုတ် သေချာအောင် စစ်ပြီးမှ ထည့်မယ် Bro
-      // တကယ်လို့ Backend က { products: [...] } ပုံစံမျိုး ပြောင်းပို့ရင်လည်း ခံနိုင်အောင် ညှိထားတယ်
+      // ✅ [FIX] Response က Array အစစ် ဟုတ်မဟုတ် သေჩာအောင် စစ်ပြီးမှ ထည့်မယ် Bro
       if (Array.isArray(response)) {
         setProducts(response);
         setTotal(response.length);
@@ -80,10 +92,83 @@ export default function ProductsPage() {
             <Button onClick={fetchProducts} variant="outline" disabled={isLoading}>
               Refresh
             </Button>
-            <Button disabled title="Feature coming soon">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Product
-            </Button>
+            
+            {/* ✅ [REAL ADD PRODUCT MODAL] Fake Button နေရာမှာ တကယ့် Real Dialog အစားထိုးလိုက်ပြီ Bro */}
+            <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Product
+                </Button>
+              </DialogTrigger>
+              
+              <DialogContent className="sm:max-w-[425px] bg-background border-border">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold">Add New Product</DialogTitle>
+                </DialogHeader>
+                
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <label htmlFor="name" className="text-sm font-medium text-foreground">
+                      Product Name
+                    </label>
+                    <Input
+                      id="name"
+                      placeholder="Enter product name (e.g. Espresso)"
+                      value={newProductName}
+                      onChange={(e) => setNewProductName(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <label htmlFor="price" className="text-sm font-medium text-foreground">
+                      Price ($)
+                    </label>
+                    <Input
+                      id="price"
+                      type="number"
+                      placeholder="0.00"
+                      value={newProductPrice}
+                      onChange={(e) => setNewProductPrice(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    disabled={!newProductName || !newProductPrice} 
+                    onClick={async () => {
+                      try {
+                        // ✅ စောစောက အလွတ်ခေါ်ထားတဲ့နေရာမှာ apiClient က ဆောက်ထားတဲ့ Method အစစ်နဲ့ ချိတ်လိုက်ပြီ Bro
+                        await apiClient.createProduct({
+                          product_name: newProductName,
+                          price: Number(newProductPrice),
+                          status: 'active'
+                        });
+
+                        toast.success("Product added successfully!");
+                        setIsAddModalOpen(false); 
+                        fetchProducts(); 
+                        
+                        setNewProductName(''); 
+                        setNewProductPrice('');
+                      } catch (err) {
+                        console.error("Add product error:", err);
+                        toast.error(axios.isAxiosError(err) && err.response?.data?.message 
+                          ? err.response.data.message 
+                          : "Failed to add product"
+                        );
+                      }
+                    }}
+                  >
+                    Save Product
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
