@@ -38,7 +38,7 @@ export default function ProductsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
   const [newProductPrice, setNewProductPrice] = useState('');
-  const [newProductQuantity, setNewProductQuantity] = useState(''); // ✅ Quantity State တိုးလိုက်ပြီ Bro
+  const [newProductQuantity, setNewProductQuantity] = useState(''); 
 
   useEffect(() => {
     fetchProducts();
@@ -133,7 +133,7 @@ export default function ProductsPage() {
                     />
                   </div>
 
-                  {/* ✅ Quantity Input ကွက် အသစ်စက်စက် ဖြည့်ထားတာ Bro */}
+                  {/* Quantity Input */}
                   <div className="grid gap-2">
                     <label htmlFor="quantity" className="text-sm font-medium text-foreground">
                       Quantity
@@ -156,7 +156,6 @@ export default function ProductsPage() {
                     disabled={!newProductName || !newProductPrice || !newProductQuantity} 
                     onClick={async () => {
                       try {
-                        // ✅ API ဆီကို Quantity ပါ ကွက်တိ ထည့်ပြီး ပို့လိုက်ပြီ Bro
                         await apiClient.createProduct({
                           product_name: newProductName,
                           price: Number(newProductPrice),
@@ -252,7 +251,6 @@ export default function ProductsPage() {
                   <tr>
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Product Name</th>
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Price</th>
-                    {/* ✅ Table Header မှာ Quantity ပြဖို့ ထည့်လိုက်တယ် Bro */}
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Quantity</th>
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
                     <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Created Date</th>
@@ -264,7 +262,6 @@ export default function ProductsPage() {
                     <tr key={product?.product_id || Math.random().toString()} className="border-b border-border hover:bg-secondary/50 transition-colors">
                       <td className="py-3 px-4 font-medium text-foreground">{product?.product_name || 'Unknown Product'}</td>
                       <td className="py-3 px-4 text-foreground">${(product?.price ?? 0).toLocaleString()}</td>
-                      {/* ✅ Table Body ထဲမှာလည်း တစ်ခါတည်း Quantity လှမ်းပြထားမယ် */}
                       <td className="py-3 px-4 text-foreground">{(product?.quantity ?? 0).toLocaleString()}</td>
                       <td className="py-3 px-4">
                         <span
