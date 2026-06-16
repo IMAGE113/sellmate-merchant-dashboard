@@ -177,12 +177,17 @@ class APIClient {
   }
 
   async getProducts(page?: number, limit?: number): Promise<Product[]> {
-  const response = await this.client.get('/dashboard/products', {
-    params: { page, limit },
-  });
+    const response = await this.client.get('/dashboard/products', {
+      params: { page, limit },
+    });
+    return response.data;
+  }
 
-  return response.data;
-}
+  // ✅ Product အသစ်ဆောက်ဖို့အတွက် တကယ့် API Endpoint အစစ်ကို လှမ်းခေါ်တဲ့ Method ထည့်လိုက်ပြီ Bro
+  async createProduct(data: { product_name: string; price: number; status: string }): Promise<{ success: boolean; data: Product }> {
+    const response = await this.client.post('/dashboard/products', data);
+    return response.data;
+  }
 
   async getAnalytics(): Promise<AnalyticsData> {
     const response = await this.client.get('/dashboard/analytics');
