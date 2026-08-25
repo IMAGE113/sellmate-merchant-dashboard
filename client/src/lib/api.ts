@@ -272,8 +272,8 @@ class APIClient {
   }
 
   async updateRequirements(shopId: string, requirements: string): Promise<{ success: boolean }> {
-    const response = await this.client.put(`/auth/merchant/requirements/${shopId}`, {
-      requirements,
+    const response = await this.client.put(`/auth/merchant/requirements/${shopId}`, null, {
+      params: { requirements },
     });
     return response.data;
   }
