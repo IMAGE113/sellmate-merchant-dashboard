@@ -67,6 +67,14 @@ export interface Product {
 export interface AnalyticsData {
   revenue_trend: ChartData[];
   orders_trend: ChartData[];
+  total_revenue?: number;
+  total_orders?: number;
+  total_customers?: number;
+  today_revenue?: number;
+  today_orders?: number;
+  monthly_revenue?: number;
+  monthly_orders?: number;
+  top_selling_product?: string;
 }
 
 export interface ProfileData {
@@ -80,6 +88,25 @@ export interface ProfileData {
 export interface TelegramBotConfig {
   bot_token: string;
   bot_username: string;
+}
+
+function normalizeOrder(order: any): Order {
+  const rawStatus = String(order?.status || '').toUpperCase();
+  const status: Order['status'] = rawStatus === 'CANCELLED'
+    ? 'cancelled'
+    : rawStatus === 'COMPLETED' || rawStatus === 'PAYMENT_CONFIRMED'
+    ? 'completed'
+    : rawStatus === 'NEW_CHAT' || rawStatus === 'COLLECTING_INFO' || rawStatus === 'PAYMENT_PENDING_REVIEW'
+    ? 'pending'
+    : 'processing';
+  return {
+    order_id: String(order?.order_id ?? order?.order_number ?? order?.id ?? ''),
+    customer_name: String(order?.customer_name ?? ''),
+    phone: String(order?.phone ?? ''),
+    amount: Number(order?.amount ?? order?.total_price ?? 0),
+    status,
+    created_at: String(order?.created_at ?? ''),
+  };
 }
 
 class APIClient {
@@ -144,7 +171,7 @@ class APIClient {
   async verifyToken(): Promise<boolean> {
     try {
       const response = await this.client.post('/auth/verify-token', {});
-      return response.data.success;
+      return Boolean(response.data?.valid ?? response.data?.success);
     } catch {
       return false;
     }
@@ -152,42 +179,91 @@ class APIClient {
 
   async getMe(): Promise<MeResponse> {
     const response = await this.client.get('/auth/me');
-    return response.data;
+    const data = response.data || {};
+    return {
+      success: true,
+      shop_id: String(data.shop_id ?? ''),
+      shop_name: String(data.shop_name ?? data.name ?? ''),
+      owner_name: String(data.owner_name ?? ''),
+      phone: String(data.phone ?? ''),
+      requirements: String(data.requirements ?? ''),
+    };
   }
 
   // Dashboard endpoints
   async getDashboardOverview(): Promise<DashboardOverview> {
-    const response = await this.client.get('/dashboard/overview');
-    return response.data;
+    const [overviewResponse, analyticsResponse, productsResponse] = await Promise.all([
+      this.client.get('/dashboard/overview'),
+      this.client.get('/dashboard/analytics'),
+      this.client.get('/dashboard/products'),
+    ]);
+    const overview = overviewResponse.data || {};
+    const stats = overview.stats || overview;
+    const analytics = analyticsResponse.data || {};
+    const products = Array.isArray(productsResponse.data)
+      ? productsResponse.data
+      : productsResponse.data?.products || [];
+    return {
+      total_orders: Number(stats.total_orders ?? analytics.total_orders ?? 0),
+      revenue: Number(analytics.total_revenue ?? stats.revenue ?? 0),
+      pending_orders: Number(stats.pending_orders ?? stats.pending_payments ?? 0),
+      products: products.length,
+      recent_orders: Array.isArray(overview.recent_orders)
+        ? overview.recent_orders.map(normalizeOrder)
+        : [],
+      revenue_chart: Array.isArray(analytics.revenue_trend) ? analytics.revenue_trend : [],
+      top_products: Array.isArray(analytics.top_products) ? analytics.top_products : [],
+    };
   }
 
-  async getOrders(page?: number, limit?: number): Promise<{ orders: Order[]; total: number }> {
+  async getOrders(page = 1, limit = 10): Promise<{ orders: Order[]; total: number }> {
     const response = await this.client.get('/dashboard/orders', {
-      params: { page, limit },
+      params: { limit, offset: Math.max(0, (page - 1) * limit) },
     });
-    return response.data;
+    const raw = Array.isArray(response.data) ? response.data : response.data?.orders || [];
+    return {
+      orders: raw.map(normalizeOrder),
+      total: Number(Array.isArray(response.data) ? raw.length : response.data?.total ?? raw.length),
+    };
   }
 
   async getOrderById(orderId: string): Promise<Order> {
     const response = await this.client.get(`/dashboard/orders/${orderId}`);
-    return response.data;
+    return normalizeOrder(response.data);
   }
 
-  async getProducts(page?: number, limit?: number): Promise<{ products: Product[]; total: number }> {
+  async getProducts(page = 1, limit = 10): Promise<{ products: Product[]; total: number }> {
     const response = await this.client.get('/dashboard/products', {
       params: { page, limit },
     });
-    return response.data;
+    const raw = Array.isArray(response.data) ? response.data : response.data?.products || [];
+    const offset = Math.max(0, (page - 1) * limit);
+    return {
+      products: Array.isArray(response.data) ? raw.slice(offset, offset + limit) : raw,
+      total: Number(Array.isArray(response.data) ? raw.length : response.data?.total ?? raw.length),
+    };
   }
 
   async getAnalytics(): Promise<AnalyticsData> {
     const response = await this.client.get('/dashboard/analytics');
-    return response.data;
+    const data = response.data || {};
+    return {
+      ...data,
+      revenue_trend: Array.isArray(data.revenue_trend) ? data.revenue_trend : [],
+      orders_trend: Array.isArray(data.orders_trend) ? data.orders_trend : [],
+    };
   }
 
   async getProfile(): Promise<ProfileData> {
     const response = await this.client.get('/dashboard/profile');
-    return response.data;
+    const data = response.data || {};
+    return {
+      shop_name: String(data.shop_name ?? data.name ?? ''),
+      owner_name: String(data.owner_name ?? ''),
+      phone: String(data.phone ?? ''),
+      shop_id: String(data.shop_id ?? ''),
+      requirements: String(data.requirements ?? ''),
+    };
   }
 
   async updateSettings(data: Partial<ProfileData>): Promise<{ success: boolean }> {
