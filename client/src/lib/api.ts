@@ -60,8 +60,20 @@ export interface Product {
   product_id: string;
   product_name: string;
   price: number;
+  quantity: number;
   status: 'active' | 'inactive';
   created_date: string;
+  sku?: string | null;
+  variant_of_id?: number | null;
+  attributes?: Record<string, unknown>;
+}
+
+export interface ProductInput {
+  product_name: string;
+  price: number;
+  quantity: number;
+  status: 'active' | 'inactive';
+  sku?: string;
 }
 
 export interface AnalyticsData {
@@ -242,6 +254,21 @@ class APIClient {
       products: Array.isArray(response.data) ? raw.slice(offset, offset + limit) : raw,
       total: Number(Array.isArray(response.data) ? raw.length : response.data?.total ?? raw.length),
     };
+  }
+
+  async createProduct(data: ProductInput): Promise<Product> {
+    const response = await this.client.post('/dashboard/products', data);
+    return response.data?.data ?? response.data;
+  }
+
+  async updateProduct(productId: string, data: Partial<ProductInput>): Promise<Product> {
+    const response = await this.client.put(`/dashboard/products/${productId}`, data);
+    return response.data?.data ?? response.data;
+  }
+
+  async deleteProduct(productId: string): Promise<{ success: boolean }> {
+    const response = await this.client.delete(`/dashboard/products/${productId}`);
+    return response.data;
   }
 
   async getAnalytics(): Promise<AnalyticsData> {
